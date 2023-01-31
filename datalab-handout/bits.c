@@ -164,7 +164,7 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-    return (!((~x) ^ (x + 1))) & (x + 1);
+    return (!((~x) ^ (x + 1))) & ((x + 1) >> 31);
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -266,7 +266,7 @@ int howManyBits(int x) {
   int i_x = x ^ (x >> 31);
   int i_mask = ~0;
 
-  int i_high16 = x >> 16;
+  int i_high16 = i_x >> 16;
   int i_high16IsZero = !i_high16;
   int i_x16 = ((i_high16IsZero + i_mask) & i_high16) | (((~i_high16IsZero + 1) & i_x & ((1 << 16) + i_mask)));
 
@@ -285,7 +285,7 @@ int howManyBits(int x) {
   int i_high1 = i_x2 >> 1;
   int i_high1IsZero = !i_high1;
   
-  return 1 + ((!i_high16IsZero) << 4) + ((!i_high8IsZero) << 3) + ((!i_high4IsZero) << 2) + ((!i_high2IsZero) << 1) + (!i_high1IsZero) + 1; 
+  return 1 + (1 & (!!i_x)) + ((!i_high16IsZero) << 4) + ((!i_high8IsZero) << 3) + ((!i_high4IsZero) << 2) + ((!i_high2IsZero) << 1) + (!i_high1IsZero); 
 }
 //float
 /* 
