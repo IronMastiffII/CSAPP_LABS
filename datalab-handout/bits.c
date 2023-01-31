@@ -164,8 +164,7 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-//  return !(x + 1 << 1) & !!(x + 1);
-    return !((~x) ^ (x + 1));
+    return (!((~x) ^ (x + 1))) & (x + 1);
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -176,7 +175,19 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x){ 
-  return !(((x >> 1) | x) + 1);
+//  int i_mask = ~0;
+
+  int i_xHigh16 = x >> 16;
+  int i_xLow16 = x;
+
+  int i_res = i_xHigh16 & i_xLow16;
+
+  int i_xHigh8 = i_res >> 8;
+  int i_xLow8 = i_res;
+
+  i_res = i_xHigh8 & i_xLow8 & 0xAA;
+
+  return !((i_res) + (~0xAA + 1));
 }
 /* 
  * negate - return -x 
@@ -274,8 +285,7 @@ int howManyBits(int x) {
   int i_high1 = i_x2 >> 1;
   int i_high1IsZero = !i_high1;
   
-  return 1 + ((!i_high16IsZero) << 4) + ((!i_high8IsZero) << 3) + ((!i_high4IsZero) << 2) + ((!i_high2IsZero) << 1) + (!i_high1IsZero);
- 
+  return 1 + ((!i_high16IsZero) << 4) + ((!i_high8IsZero) << 3) + ((!i_high4IsZero) << 2) + ((!i_high2IsZero) << 1) + (!i_high1IsZero) + 1; 
 }
 //float
 /* 
@@ -292,7 +302,7 @@ int howManyBits(int x) {
 unsigned floatScale2(unsigned uf) {
   int i_E = uf >> 23 & 0xFF;
 
-  if ((uf << 1 >> 24) + 1 == 0){
+  if (i_E == 0xFF){
 	return uf;
   }
 
@@ -321,7 +331,11 @@ int floatFloat2Int(unsigned uf) {
 	return 0x80000000u;
   }
 
-  return (!!i_E) << i_E;
+  if(i_E <= 0x7F){
+	return 0;
+  }
+
+  return 1 << (i_E + (~0x7F + 1));
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -341,12 +355,12 @@ unsigned floatPower2(int x) {
 
     if(!i_xNeg){
 	x += 0x7F;
-	if(x > 0xFF){
+	if(x > 0xFF || x < 0){
 	    x = 0xFF;
 	}
     }
     else{
-	x = (~x + 1) + 0x7F;
+	x = x + 0x7F;
 	if(x < 0){
 	    x = 0x7F;
 	}
