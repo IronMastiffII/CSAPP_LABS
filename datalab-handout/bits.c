@@ -164,7 +164,8 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-    return !((~x) << 1);
+//  return !(x + 1 << 1) & !!(x + 1);
+    return !((~x) ^ (x + 1));
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -174,8 +175,8 @@ int isTmax(int x) {
  *   Max ops: 12
  *   Rating: 2
  */
-int allOddBits(int x) {
-  return !(2 + (x | (x << 1)));
+int allOddBits(int x){ 
+  return !(((x >> 1) | x) + 1);
 }
 /* 
  * negate - return -x 
@@ -198,7 +199,7 @@ int negate(int x) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-  return !(x >> 31) & (!((x + (~0x2F + 1)) >> 31)) & (((x + (~0x3A + 1)) >> 31) & 1);
+  return !(x >> 31) & (!((x + (~0x30 + 1)) >> 31)) & (((x + (~0x3A + 1)) >> 31) & 1);
 }
 /* 
  * conditional - same as x ? y : z 
@@ -255,25 +256,25 @@ int howManyBits(int x) {
   int i_mask = ~0;
 
   int i_high16 = x >> 16;
-  int i_high16Not0 = !!i_high16;
-  int i_x16 = ((~i_high16Not0 + 1) & i_high16) | (((i_mask + i_high16Not0) & i_x & ((1 << 16) + i_mask)));
+  int i_high16IsZero = !i_high16;
+  int i_x16 = ((i_high16IsZero + i_mask) & i_high16) | (((~i_high16IsZero + 1) & i_x & ((1 << 16) + i_mask)));
 
   int i_high8 = i_x16 >> 8;
-  int i_high8Not0 = !!i_high8;
-  int i_x8 = ((~i_high8Not0 + 1) & i_high8) | (((i_mask + i_high8Not0) & i_x16 & 0xFF));
+  int i_high8IsZero = !i_high8;
+  int i_x8 = ((i_high8IsZero + i_mask) & i_high8) | (((~i_high8IsZero + 1) & i_x16 & 0xFF));
 
   int i_high4 = i_x8 >> 4;
-  int i_high4Not0 = !!i_high4;
-  int i_x4 = ((~i_high4Not0 + 1) & i_high4) | (((i_mask + i_high4Not0) & i_x8 & 0xF));
+  int i_high4IsZero = !i_high4;
+  int i_x4 = ((i_high4IsZero + i_mask) & i_high4) | (((~i_high4IsZero + 1) & i_x8 & 0xF));
 
   int i_high2 = i_x4 >> 2;
-  int i_high2Not0 = !!i_high2;
-  int i_x2 = ((~i_high2Not0 + 1) & i_high2) | (((i_mask + i_high2Not0) & i_x4 & 0x3));
+  int i_high2IsZero = !i_high2;
+  int i_x2 = ((i_high2IsZero + i_mask) & i_high2) | (((~i_high2IsZero + 1) & i_x4 & 0x3));
 
   int i_high1 = i_x2 >> 1;
-  int i_highNot0 = !!i_high1;
+  int i_high1IsZero = !i_high1;
   
-  return 1 + (i_high16Not0 << 4) + (i_high8Not0 << 3) + (i_high4Not0 << 2) + (i_high2Not0 << 1) + i_highNot0;
+  return 1 + ((!i_high16IsZero) << 4) + ((!i_high8IsZero) << 3) + ((!i_high4IsZero) << 2) + ((!i_high2IsZero) << 1) + (!i_high1IsZero);
  
 }
 //float
@@ -299,7 +300,7 @@ unsigned floatScale2(unsigned uf) {
 	return uf + (1 << 23);
   }
 
-  return (uf & 0x7FFFFF << 1) | (uf & (1 << 31));
+  return ((uf & 0x7FFFFF) << 1) | (uf & (1 << 31));
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -320,7 +321,7 @@ int floatFloat2Int(unsigned uf) {
 	return 0x80000000u;
   }
 
-  return 1 & (!!i_E) << i_E;
+  return (!!i_E) << i_E;
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -339,15 +340,15 @@ unsigned floatPower2(int x) {
     int i_xNeg = x >> 31;
 
     if(!i_xNeg){
-	x += 0x80;
+	x += 0x7F;
 	if(x > 0xFF){
 	    x = 0xFF;
 	}
     }
     else{
-	x = (~x + 1) + 0x80;
+	x = (~x + 1) + 0x7F;
 	if(x < 0){
-	    x = 0x80;
+	    x = 0x7F;
 	}
     }
 
