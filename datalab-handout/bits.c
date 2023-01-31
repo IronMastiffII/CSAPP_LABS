@@ -143,7 +143,7 @@ NOTES:
  *   Rating: 1
  */
 int bitXor(int x, int y) {
-  return ((~x) & y) | ((~y) & x);
+  return (~(x & y)) & (~(~x & ~y));
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -164,7 +164,11 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-    return (!((~x) ^ (x + 1))) & ((x + 1) >> 31);
+    return (!((~x) ^ (x + 1))) & (!!(x + 1));
+   // int i_res = x + 1;
+   // i_res = i_res + (!i_res);
+   // i_res = i_res + i_res;
+   // return !i_res;
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -326,16 +330,24 @@ unsigned floatScale2(unsigned uf) {
  */
 int floatFloat2Int(unsigned uf) {
   int i_E = uf >> 23 & 0xFF;
+  int i_Sign = uf & (1 << 31);
 
-  if(i_E & 0xE0){
+  int i_res = 1 << (i_E + (~0x7F + 1));
+
+  if(i_E >= 0xBF){
 	return 0x80000000u;
   }
 
-  if(i_E <= 0x7F){
+  if(i_E < 0x7F){
 	return 0;
   }
 
-  return 1 << (i_E + (~0x7F + 1));
+  if(i_Sign){
+	return ~i_res + 1;
+  }
+
+  return i_res;
+
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -362,7 +374,7 @@ unsigned floatPower2(int x) {
     else{
 	x = x + 0x7F;
 	if(x < 0){
-	    x = 0x7F;
+	    x = 0;
 	}
     }
 
